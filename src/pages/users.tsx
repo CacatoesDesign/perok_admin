@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { userService } from '../services/supabase'
 import { Button } from '../components/ui/button'
-
-interface User {
-  id: string
-  email: string
-  created_at: string
-  last_sign_in: string
-}
+import type { User } from '../types/database'
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([])
@@ -19,13 +13,8 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setUsers(data || [])
+      const data = await userService.getUsers()
+      setUsers(data)
     } catch (error) {
       console.error('Error fetching users:', error)
     } finally {
@@ -34,7 +23,11 @@ const Users = () => {
   }
 
   if (loading) {
-    return <div>Loading...</div>
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading users...</div>
+      </div>
+    )
   }
 
   return (
@@ -50,6 +43,9 @@ const Users = () => {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Joined
@@ -69,14 +65,19 @@ const Users = () => {
                   <div className="text-sm text-gray-900">{user.email}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {user.user_metadata?.full_name || '-'}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500">
                     {new Date(user.created_at).toLocaleDateString()}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-500">
-                    {user.last_sign_in
-                      ? new Date(user.last_sign_in).toLocaleDateString()
+                    {user.last_sign_in_at
+                      ? new Date(user.last_sign_in_at).toLocaleDateString()
                       : 'Never'}
                   </div>
                 </td>
