@@ -7,7 +7,7 @@ const Sidebar = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Users2, label: 'Users', path: '/users' },
-    { icon: Package, label: 'Items', path: '/items' },
+    { icon: Package, label: 'Listings', path: '/listings' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ]
 

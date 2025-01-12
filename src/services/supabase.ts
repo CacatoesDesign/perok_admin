@@ -1,10 +1,10 @@
 import { supabase } from '../lib/supabase'
-import { User, Item, DashboardStats } from '../types/database'
+import { Profile, Listing, ListingImage, DashboardStats } from '../types/database'
 
-export const userService = {
-  async getUsers(): Promise<User[]> {
+export const profileService = {
+  async getProfiles(): Promise<Profile[]> {
     const { data, error } = await supabase
-      .from('auth.users')
+      .from('profiles')
       .select('*')
       .order('created_at', { ascending: false })
 
@@ -12,33 +12,20 @@ export const userService = {
     return data || []
   },
 
-  async getUserCount(): Promise<number> {
+  async getProfileCount(): Promise<number> {
     const { count, error } = await supabase
-      .from('auth.users')
+      .from('profiles')
       .select('*', { count: 'exact' })
-
-    if (error) throw error
-    return count || 0
-  },
-
-  async getActiveUserCount(): Promise<number> {
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-    const { count, error } = await supabase
-      .from('auth.users')
-      .select('*', { count: 'exact' })
-      .gt('last_sign_in_at', thirtyDaysAgo.toISOString())
 
     if (error) throw error
     return count || 0
   }
 }
 
-export const itemService = {
-  async getItems(): Promise<Item[]> {
+export const listingService = {
+  async getListings(): Promise<Listing[]> {
     const { data, error } = await supabase
-      .from('items')
+      .from('listings')
       .select('*')
       .order('created_at', { ascending: false })
 
@@ -46,29 +33,18 @@ export const itemService = {
     return data || []
   },
 
-  async getItemsByUser(userId: string): Promise<Item[]> {
-    const { data, error } = await supabase
-      .from('items')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-    return data || []
-  },
-
-  async getItemCount(): Promise<number> {
+  async getListingCount(): Promise<number> {
     const { count, error } = await supabase
-      .from('items')
+      .from('listings')
       .select('*', { count: 'exact' })
 
     if (error) throw error
     return count || 0
   },
 
-  async getActiveItemCount(): Promise<number> {
+  async getActiveListingCount(): Promise<number> {
     const { count, error } = await supabase
-      .from('items')
+      .from('listings')
       .select('*', { count: 'exact' })
       .eq('status', 'active')
 
@@ -77,57 +53,77 @@ export const itemService = {
   }
 }
 
+export const listingImageService = {
+  async getListingImages(): Promise<ListingImage[]> {
+    const { data, error } = await supabase
+      .from('listing_images')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  async getListingImagesByListing(listingId: string): Promise<ListingImage[]> {
+    const { data, error } = await supabase
+      .from('listing_images')
+      .select('*')
+      .eq('listing_id', listingId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  }
+}
+
 export const dashboardService = {
   async getStats(): Promise<DashboardStats> {
     const [
-      totalUsers,
-      activeUsers,
-      totalItems,
-      activeItems,
+      totalProfiles,
+      totalListings,
+      activeListings,
       recentActivity
     ] = await Promise.all([
-      userService.getUserCount(),
-      userService.getActiveUserCount(),
-      itemService.getItemCount(),
-      itemService.getActiveItemCount(),
+      profileService.getProfileCount(),
+      listingService.getListingCount(),
+      listingService.getActiveListingCount(),
       this.getRecentActivity()
     ])
 
     return {
-      totalUsers,
-      activeUsers,
-      totalItems,
-      activeItems,
+      totalUsers: totalProfiles,
+      activeUsers: totalProfiles, // You might want to define what makes a user "active"
+      totalListings,
+      activeListings,
       recentActivity
     }
   },
 
   async getRecentActivity() {
-    // Combine recent users and items
-    const { data: recentUsers, error: usersError } = await supabase
-      .from('auth.users')
-      .select('id, email, created_at')
+    const { data: recentProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, created_at')
       .order('created_at', { ascending: false })
       .limit(5)
 
-    const { data: recentItems, error: itemsError } = await supabase
-      .from('items')
-      .select('id, name, created_at, updated_at')
+    const { data: recentListings, error: listingsError } = await supabase
+      .from('listings')
+      .select('id, created_at, title')
       .order('created_at', { ascending: false })
       .limit(5)
 
-    if (usersError || itemsError) throw usersError || itemsError
+    if (profilesError || listingsError) throw profilesError || listingsError
 
     const activity = [
-      ...(recentUsers?.map(user => ({
+      ...(recentProfiles?.map(profile => ({
         type: 'user_joined' as const,
-        timestamp: user.created_at,
-        details: `New user joined: ${user.email}`
+        timestamp: profile.created_at,
+        details: `New user joined`
       })) || []),
-      ...(recentItems?.map(item => ({
-        type: 'item_created' as const,
-        timestamp: item.created_at,
-        details: `New item created: ${item.name}`
+      ...(recentListings?.map(listing => ({
+        type: 'listing_created' as const,
+        timestamp: listing.created_at,
+        details: `New listing created: ${listing.title || 'Untitled'}`
       })) || [])
     ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, 10)

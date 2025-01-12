@@ -16,6 +16,12 @@ export interface User {
   updated_at?: string
 }
 
+export interface Profile {
+  id: string
+  created_at: string
+  updated_at?: string
+}
+
 export interface Item {
   id: string
   created_at: string
@@ -25,13 +31,25 @@ export interface Item {
   status: 'active' | 'inactive' | 'deleted'
 }
 
+export interface Listing {
+  id: string
+  created_at: string
+}
+
+export interface ListingImage {
+  id: string
+  created_at: string
+  listing_id: string
+  url: string
+}
+
 export interface DashboardStats {
   totalUsers: number
   activeUsers: number
-  totalItems: number
-  activeItems: number
+  totalListings: number
+  activeListings: number
   recentActivity: {
-    type: 'user_joined' | 'item_created' | 'item_updated'
+    type: 'user_joined' | 'listing_created' | 'listing_updated'
     timestamp: string
     details: string
   }[]
