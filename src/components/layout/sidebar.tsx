@@ -1,10 +1,13 @@
-import { Link } from 'react-router-dom'
-import { LayoutDashboard, Users, Settings } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { LayoutDashboard, Users2, Settings, Package } from 'lucide-react'
+import { cn } from '../../lib/utils'
 
 const Sidebar = () => {
+  const { pathname } = useLocation()
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Users, label: 'Users', path: '/users' },
+    { icon: Users2, label: 'Users', path: '/users' },
+    { icon: Package, label: 'Items', path: '/items' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ]
 
@@ -16,9 +19,12 @@ const Sidebar = () => {
           <Link
             key={item.path}
             to={item.path}
-            className="flex items-center gap-2 p-2 hover:bg-gray-800 rounded-md mb-2"
+            className={cn(
+              'flex items-center space-x-3 p-2 rounded-lg',
+              pathname === item.path ? 'bg-gray-100' : 'hover:bg-gray-50'
+            )}
           >
-            <item.icon className="w-5 h-5" />
+            <item.icon size={20} />
             <span>{item.label}</span>
           </Link>
         ))}

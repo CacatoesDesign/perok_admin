@@ -3,6 +3,7 @@ import Sidebar from './components/layout/sidebar';
 import Dashboard from './pages/dashboard';
 import Users from './pages/users';
 import Settings from './pages/settings';
+import Items from './pages/items';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/items" element={<Items />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
